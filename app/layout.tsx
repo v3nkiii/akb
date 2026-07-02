@@ -29,11 +29,8 @@ export default function RootLayout({
       className={`${cinzel.variable} ${inter.variable}`}
     >
       <body>
-
         <BackgroundMusic />
-
         {children}
-
       </body>
     </html>
   );
