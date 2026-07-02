@@ -1,20 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { questions } from "@/data/questions";
 
 const MAX = 14;
 
 export default function EpisodePage() {
   const router = useRouter();
-  const params = useSearchParams();
 
-  const q = Number(params.get("q") || "1") - 1;
-  const question = questions[q];
-
+  const [q, setQ] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [locked, setLocked] = useState(false);
+
+  const question = questions[q];
+
+  // ✅ SAFE URL READ (NO useSearchParams)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const query = Number(params.get("q") || "1") - 1;
+
+    const safe = Math.max(0, Math.min(query, MAX - 1));
+
+    setQ(safe);
+    setSelected(null);
+    setLocked(false);
+  }, []);
 
   if (!question) {
     router.replace("/final-video");
