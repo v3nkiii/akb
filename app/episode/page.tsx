@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { questions } from "@/data/questions";
 import { useRouter } from "next/navigation";
+import Typography from "@/components/Typography";
 
 const MAX_EPISODES = 14;
 
@@ -25,8 +26,6 @@ export default function EpisodePage() {
     let index = saved ? Number(saved) : 0;
 
     if (isNaN(index) || index < 0) index = 0;
-
-    // 🚨 HARD CLAMP (prevents invalid + repeat issues)
     if (index > MAX_EPISODES) index = MAX_EPISODES;
 
     setEpisodeIndex(index);
@@ -56,6 +55,7 @@ export default function EpisodePage() {
 
     const audio = new Audio(src);
     audioRef.current = audio;
+
     audio.play().catch(() => {});
   };
 
@@ -77,10 +77,8 @@ export default function EpisodePage() {
 
     const next = episodeIndex + 1;
     const isCorrect = selected === question.correctAnswer;
-
     const goFinal = next >= MAX_EPISODES;
 
-    /* ================= CORRECT ================= */
     if (isCorrect) {
       playSound("/sounds/correct.mp3");
 
@@ -94,7 +92,6 @@ export default function EpisodePage() {
       return;
     }
 
-    /* ================= WRONG ================= */
     playSound("/sounds/cheers.mp3");
 
     sessionStorage.setItem("episodeIndex", String(next));
@@ -129,14 +126,19 @@ export default function EpisodePage() {
 
         <div style={container}>
 
-          <h1 style={title}>
+          {/* ================= TITLE (TYPOGRAPHY) ================= */}
+          <Typography variant="h2">
             EPISODE {episodeIndex + 1} / 14
-          </h1>
+          </Typography>
 
+          {/* ================= QUESTION (TYPOGRAPHY) ================= */}
           <div style={questionBox}>
-            {question.question}
+            <Typography variant="p">
+              {question.question}
+            </Typography>
           </div>
 
+          {/* ================= OPTIONS ================= */}
           <div style={grid}>
             {question.options.map((opt, i) => {
               const isSelected = selected === i;
@@ -175,7 +177,7 @@ export default function EpisodePage() {
   );
 }
 
-/* ================= STYLES (MOBILE FIXED) ================= */
+/* ================= STYLES ================= */
 
 const pageStyle: any = {
   height: "100vh",
@@ -230,19 +232,13 @@ const container: any = {
   color: "white",
 };
 
-const title: any = {
-  fontSize: "clamp(20px, 5vw, 38px)",
-  color: "#FFD54A",
-  marginBottom: "10px",
-};
-
 const questionBox: any = {
   padding: "20px",
   background: "#0b1d3a",
   borderRadius: "25px",
   border: "2px solid #FFD54A",
+  marginTop: "20px",
   marginBottom: "25px",
-  fontSize: "clamp(16px, 4vw, 22px)",
 };
 
 const grid: any = {
@@ -258,7 +254,6 @@ const option: any = {
   background: "#0b1d3a",
   color: "white",
   cursor: "pointer",
-  fontSize: "clamp(14px, 3.5vw, 18px)",
 };
 
 const selectedStyle: any = {
