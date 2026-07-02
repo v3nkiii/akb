@@ -1,16 +1,22 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function GiftPage() {
   const router = useRouter();
-  const params = useSearchParams();
-
   const videoRef = useRef<HTMLVideoElement | null>(null);
+
   const [playing, setPlaying] = useState(false);
 
-  const q = params.get("q");
+  // ✅ SAFE URL PARSE (NO useSearchParams)
+  const getQ = () => {
+    if (typeof window === "undefined") return 1;
+    const params = new URLSearchParams(window.location.search);
+    return Number(params.get("q") || "1");
+  };
+
+  const q = getQ();
 
   const play = async () => {
     const v = videoRef.current;
@@ -21,6 +27,14 @@ export default function GiftPage() {
       setPlaying(true);
     } catch {}
   };
+
+  const goNext = () => {
+    router.push(`/episode?q=${q}`);
+  };
+
+  useEffect(() => {
+    setPlaying(false);
+  }, []);
 
   return (
     <main className="w-screen h-screen bg-black relative">
@@ -43,10 +57,10 @@ export default function GiftPage() {
 
       {playing && (
         <button
-          onClick={() => router.push(`/birthday-twist?q=${q}`)}
+          onClick={goNext}
           className="absolute bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full"
         >
-          Continue →
+          Next Question →
         </button>
       )}
 
