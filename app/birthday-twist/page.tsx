@@ -1,14 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { dares } from "@/data/dares";
 
 export default function BirthdayTwist() {
   const router = useRouter();
-  const params = useSearchParams();
-
-  const q = Number(params.get("q") || "1");
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -17,6 +14,15 @@ export default function BirthdayTwist() {
   const [dare, setDare] = useState("");
   const [finalDare, setFinalDare] = useState(false);
   const [musicPlaying, setMusicPlaying] = useState(false);
+
+  // ✅ SAFE: read query param WITHOUT useSearchParams
+  const getQ = () => {
+    if (typeof window === "undefined") return 1;
+    const params = new URLSearchParams(window.location.search);
+    return Number(params.get("q") || "1");
+  };
+
+  const q = getQ();
 
   // 🎬 STEP 1: popup → auto start roller
   useEffect(() => {
@@ -39,7 +45,6 @@ export default function BirthdayTwist() {
 
       count++;
 
-      // 🎯 stop after few cycles
       if (count > 25) {
         clearInterval(interval);
         setRolling(false);
@@ -61,7 +66,7 @@ export default function BirthdayTwist() {
     setMusicPlaying(true);
   };
 
-  // 🎬 COMPLETE FLOW
+  // 🎬 COMPLETE FLOW → back to gift
   const complete = () => {
     router.push(`/gift?q=${q}`);
   };
