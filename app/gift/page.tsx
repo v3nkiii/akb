@@ -6,72 +6,46 @@ import { useRouter } from "next/navigation";
 export default function GiftPage() {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [playing, setPlaying] = useState(false);
+  const [started, setStarted] = useState(false);
 
-  const startVideo = async () => {
+  const playVideo = async () => {
     const video = videoRef.current;
     if (!video) return;
 
     try {
-      // REQUIRED FOR iOS
-      video.muted = false;
-      video.currentTime = 0;
-
       await video.play();
-      setPlaying(true);
-    } catch (err) {
-      console.log("Video play blocked:", err);
+      setStarted(true);
+    } catch (e) {
+      console.log("Video blocked:", e);
     }
   };
 
   return (
-    <main className="relative w-screen h-screen bg-black flex items-center justify-center">
+    <main className="w-screen h-screen bg-black flex items-center justify-center relative">
 
-      {/* VIDEO */}
       <video
         ref={videoRef}
         src="/videos/gift.mp4"
         className="w-full h-full object-cover"
         playsInline
         controls={false}
-        preload="auto"
       />
 
-      {/* PLAY BUTTON (iOS SAFE TRIGGER) */}
-      {!playing && (
+      {!started && (
         <button
-          onClick={startVideo}
-          className="
-            absolute
-            z-10
-            px-8 py-4
-            bg-yellow-400
-            text-black
-            font-bold
-            rounded-full
-            shadow-lg
-          "
+          onClick={playVideo}
+          className="absolute z-10 px-6 py-3 bg-yellow-400 text-black font-bold rounded-full"
         >
-          ▶ Play Gift
+          Open Gift 🎁
         </button>
       )}
 
-      {/* BACK BUTTON AFTER PLAY */}
-      {playing && (
+      {started && (
         <button
-          onClick={() => router.push("/episode")}
-          className="
-            absolute
-            bottom-10
-            z-10
-            px-8 py-3
-            bg-white
-            text-black
-            font-bold
-            rounded-full
-          "
+          onClick={() => router.push("/birthday-twist")}
+          className="absolute bottom-10 z-10 px-6 py-3 bg-white text-black rounded-full"
         >
-          Next Episode →
+          Next →
         </button>
       )}
 
