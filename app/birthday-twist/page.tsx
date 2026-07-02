@@ -1,183 +1,63 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { dares } from "@/data/dares";
-import Link from "next/link";
 
-export default function BirthdayTwistPage() {
-  const [finalDare, setFinalDare] = useState("");
-  const [spinning, setSpinning] = useState(true);
-  const [musicStarted, setMusicStarted] = useState(false);
+export default function BirthdayTwist() {
+  const router = useRouter();
+  const params = useSearchParams();
 
-  const musicRef = useRef<HTMLAudioElement | null>(null);
+  const q = params.get("q");
 
-  // 🔥 SIMPLE RELIABLE ROLLER (NO GUARDS, NO BREAKAGE)
-  useEffect(() => {
-    const stored = localStorage.getItem("darePool");
-    let remaining = stored ? JSON.parse(stored) : [...dares];
+  const [dare, setDare] = useState("");
+  const [rolling, setRolling] = useState(false);
 
-    if (remaining.length === 0) remaining = [...dares];
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const start = () => {
+    setRolling(true);
 
     let count = 0;
 
-    const interval = setInterval(() => {
-      const index = Math.floor(Math.random() * remaining.length);
-      setFinalDare(remaining[index]);
+    intervalRef.current = setInterval(() => {
+      const random = dares[Math.floor(Math.random() * dares.length)];
+      setDare(random);
 
       count++;
 
-      if (count > 10) {
-        clearInterval(interval);
-
-        const selected = remaining[index];
-        remaining.splice(index, 1);
-
-        localStorage.setItem("darePool", JSON.stringify(remaining));
-
-        setFinalDare(selected);
-        setSpinning(false);
+      if (count > 20) {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        setRolling(false);
       }
-    }, 40);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // 🎵 MUSIC
-  function startMusic() {
-    if (!musicRef.current) {
-      musicRef.current = new Audio("/sounds/twist.mp3");
-      musicRef.current.loop = true;
-      musicRef.current.volume = 1;
-    }
-
-    musicRef.current.play().catch(() => {});
-    setMusicStarted(true);
-  }
-
-  function stopMusic() {
-    if (musicRef.current) {
-      musicRef.current.pause();
-      musicRef.current.currentTime = 0;
-    }
-  }
+    }, 70);
+  };
 
   return (
-    <main style={pageStyle}>
+    <main className="w-screen h-screen flex flex-col items-center justify-center bg-black text-white">
 
-      {/* BACKGROUND */}
-      <div style={bgStyle} />
-      <div style={overlayStyle} />
+      <div className="p-6 border border-yellow-400 w-[80%] text-center">
+        {dare || "Press Start"}
+      </div>
 
-      {/* ONLY ONE BUTTON POSSIBLE */}
-      {!musicStarted && (
-        <div style={musicBtnWrap}>
-          <button onClick={startMusic} style={musicBtn}>
-            Start Music
-          </button>
-        </div>
+      {!rolling && (
+        <button
+          onClick={start}
+          className="mt-4 px-6 py-3 bg-yellow-400 text-black rounded-full"
+        >
+          Start Roll
+        </button>
       )}
 
-      {/* CONTENT */}
-      <div style={center}>
-
-        <h1 style={title}>
-          🎉 BIRTHDAY TWIST
-        </h1>
-
-        <div style={dareBox}>
-          {finalDare}
-        </div>
-
-        {!spinning && (
-          <Link
-            href="/gift"
-            onClick={stopMusic}
-            style={btn}
-          >
-            COMPLETE →
-          </Link>
-        )}
-
-      </div>
+      {!rolling && dare && (
+        <button
+          onClick={() => router.push(`/episode?q=${q}`)}
+          className="mt-4 px-6 py-3 bg-white text-black rounded-full"
+        >
+          Back →
+        </button>
+      )}
 
     </main>
   );
 }
-
-/* ================= STYLES ================= */
-
-const pageStyle: any = {
-  height: "100vh",
-  width: "100vw",
-  position: "relative",
-  overflow: "hidden",
-};
-
-const bgStyle: any = {
-  position: "absolute",
-  inset: 0,
-  backgroundImage: "url('/backgrounds/akb-stage.png')",
-  backgroundSize: "cover",
-  backgroundPosition: "center",
-  filter: "blur(6px) brightness(0.4)",
-  transform: "scale(1.05)",
-};
-
-const overlayStyle: any = {
-  position: "absolute",
-  inset: 0,
-  backgroundColor: "rgba(0,0,0,0.55)",
-};
-
-const center: any = {
-  position: "relative",
-  zIndex: 2,
-  height: "100%",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "25px",
-};
-
-const title: any = {
-  fontSize: "42px",
-  color: "#FFD54A",
-};
-
-const dareBox: any = {
-  width: "900px",
-  padding: "30px",
-  borderRadius: "25px",
-  border: "2px solid #FFD54A",
-  background: "#0b1d3a",
-  color: "white",
-  fontSize: "24px",
-  textAlign: "center",
-};
-
-const btn: any = {
-  padding: "12px 22px",
-  borderRadius: "18px",
-  background: "#FFD54A",
-  border: "none",
-  fontWeight: "bold",
-  textDecoration: "none",
-  color: "#111",
-};
-
-const musicBtnWrap: any = {
-  position: "absolute",
-  top: "20px",
-  right: "20px",
-  zIndex: 50,
-};
-
-const musicBtn: any = {
-  padding: "10px 14px",
-  borderRadius: "20px",
-  background: "#FFD54A",
-  border: "none",
-  fontWeight: "bold",
-  cursor: "pointer",
-};
