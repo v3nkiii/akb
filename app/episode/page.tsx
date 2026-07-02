@@ -15,10 +15,13 @@ export default function EpisodePage() {
 
   const [selected, setSelected] = useState<number | null>(null);
   const [locked, setLocked] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
 
+  /* ================= RESET ON QUESTION CHANGE ================= */
   useEffect(() => {
     setSelected(null);
     setLocked(false);
+    setShowPopup(false);
   }, [q]);
 
   if (!question) {
@@ -35,21 +38,42 @@ export default function EpisodePage() {
     const isLast = next >= MAX;
     const correct = selected === question.correctAnswer;
 
+    // 🏁 FINAL QUESTION → ALWAYS GO FINAL VIDEO
     if (isLast) {
       router.push("/final-video");
       return;
     }
 
-    if (correct) {
-      router.push(`/gift?q=${next + 1}`);
-    } else {
-      router.push(`/birthday-twist?q=${next + 1}`);
+    // ❌ WRONG ANSWER FLOW (POPUP FIRST, THEN ROUTE)
+    if (!correct) {
+      setShowPopup(true);
+
+      setTimeout(() => {
+        router.push(`/birthday-twist?q=${next + 1}`);
+      }, 1800);
+
+      return; // 🚨 CRITICAL STOP (prevents double navigation)
     }
+
+    // ✅ CORRECT ANSWER FLOW
+    router.push(`/gift?q=${next + 1}`);
   };
 
   return (
-    <main className="w-screen h-screen flex items-center justify-center bg-black text-white">
+    <main className="w-screen h-screen flex items-center justify-center bg-black text-white relative">
 
+      {/* ================= POPUP ================= */}
+      {showPopup && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80">
+          <img
+            src="/birthday-twist.png"
+            className="w-full h-full object-cover"
+            alt="birthday twist"
+          />
+        </div>
+      )}
+
+      {/* ================= CONTENT ================= */}
       <div className="w-[90%] max-w-2xl text-center">
 
         <h1 className="text-xl mb-4">
@@ -63,7 +87,9 @@ export default function EpisodePage() {
             <button
               key={i}
               onClick={() => setSelected(i)}
-              className="p-3 border border-yellow-400 rounded"
+              className={`p-3 border rounded ${
+                selected === i ? "bg-yellow-400 text-black" : "border-yellow-400"
+              }`}
             >
               {opt}
             </button>
