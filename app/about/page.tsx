@@ -18,7 +18,7 @@ export default function AboutPage() {
 
       <div className="relative z-10 max-w-3xl">
 
-        {/* ================= IMAGE ================= */}
+        {/* ================= CONTESTANT IMAGE ================= */}
         <img
           src="/photos/contestant.png"
           alt="Contestant"
@@ -37,13 +37,13 @@ export default function AboutPage() {
           The AKB Show 🎬
         </Typography>
 
-        {/* ================= DESCRIPTION ================= */}
+        {/* ================= CLEAN DESCRIPTION ================= */}
         <Typography variant="p" className="mb-8">
           A birthday game built with twists, challenges, and surprises.
           Answer questions, survive the chaos, and unlock the final reveal.
         </Typography>
 
-        {/* ================= BUTTON ================= */}
+        {/* ================= START BUTTON ================= */}
         <Link
           href="/episode"
           className="
