@@ -1,120 +1,97 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { questions } from "@/data/questions";
-
-const MAX = 14;
+import { useRouter } from "next/navigation";
 
 export default function EpisodePage() {
   const router = useRouter();
 
-  const [q, setQ] = useState(0);
+  const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [locked, setLocked] = useState(false);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const index = Number(params.get("q") || "1") - 1;
+  const question = questions[index];
 
-    setQ(Math.max(0, Math.min(index, MAX - 1)));
-    setSelected(null);
-    setLocked(false);
-  }, []);
-
-  const question = questions[q];
-
-  if (!question) {
-    router.replace("/final-video");
-    return null;
-  }
-
-  const next = q + 1;
-  const isLast = next >= MAX;
-  const correct = selected === question.correctAnswer;
+  const playSound = (src: string) => {
+    const audio = new Audio(src);
+    audio.play().catch(() => {});
+  };
 
   const handleContinue = () => {
     if (selected === null || locked) return;
 
     setLocked(true);
 
+    const isLast = index === questions.length - 1;
+    const correct = selected === question.correctAnswer;
+
     if (isLast) {
-      router.push("/final-video");
+      router.push("/gift");
       return;
     }
 
-    router.push(
-      correct
-        ? `/gift?q=${next + 1}`
-        : `/birthday-twist?q=${next + 1}`
-    );
+    if (correct) {
+      playSound("/sounds/correct.mp3");
+      router.push("/gift");
+    } else {
+      playSound("/sounds/cheers.mp3");
+      router.push("/birthday-twist");
+    }
   };
 
-return (
-  <main className="w-screen h-screen relative flex items-center justify-center text-white overflow-hidden">
+  return (
+    <main className="w-screen h-screen relative overflow-hidden flex items-center justify-center text-white">
 
-    {/* BACKGROUND IMAGE */}
-    <div
-      className="absolute inset-0"
-      style={{
-        backgroundImage: "url('/backgrounds/akb-stage.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        filter: "brightness(0.35) blur(6px)",
-        transform: "scale(1.05)",
-      }}
-    />
+      {/* BACKGROUND */}
+      <div className="absolute inset-0 bg-black">
+        <div
+          className="w-full h-full opacity-40"
+          style={{
+            backgroundImage: "url('/backgrounds/akb-stage.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            filter: "blur(6px)",
+            transform: "scale(1.05)",
+          }}
+        />
+      </div>
 
-    {/* DARK OVERLAY */}
-    <div className="absolute inset-0 bg-black/70" />
+      {/* GLASS CARD */}
+      <div className="relative z-10 w-[90%] max-w-3xl text-center">
 
-    {/* GLASS CARD */}
-    <div className="relative z-10 w-[92%] max-w-3xl text-center">
+        <h1 className="text-4xl font-bold text-yellow-300 mb-4">
+          Question {index + 1}
+        </h1>
 
-      {/* HEADER */}
-      <h1 className="text-4xl font-bold text-yellow-300 drop-shadow-lg">
-        Question {q + 1}
-      </h1>
+        <p className="text-xl mb-8">{question.question}</p>
 
-      <p className="mt-4 text-xl text-white/90">
-        {question.question}
-      </p>
+        <div className="grid grid-cols-2 gap-5">
+          {question.options.map((opt, i) => (
+            <button
+              key={i}
+              onClick={() => setSelected(i)}
+              className={`p-4 rounded-xl border transition-all ${
+                selected === i
+                  ? "bg-yellow-400 text-black"
+                  : "border-yellow-400 bg-white/5"
+              }`}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
 
-      {/* OPTIONS GRID */}
-      <div className="grid grid-cols-2 gap-5 mt-8">
-
-        {question.options.map((opt, i) => (
+        {selected !== null && (
           <button
-            key={i}
-            onClick={() => setSelected(i)}
-            className={`py-4 px-6 rounded-xl border transition-all duration-200 text-lg font-semibold ${
-              selected === i
-                ? "bg-yellow-400 text-black border-yellow-300 scale-105"
-                : "bg-white/5 border-yellow-400 hover:bg-white/10"
-            }`}
+            onClick={handleContinue}
+            className="mt-8 px-8 py-3 bg-yellow-400 text-black font-bold rounded-full"
           >
-            {opt}
+            Continue →
           </button>
-        ))}
+        )}
+
       </div>
-
-      {/* LIFELINES AREA */}
-      <div className="mt-6 flex justify-center gap-4">
-        {/* lifelines already added earlier will render here */}
-      </div>
-
-      {/* CONTINUE */}
-      {selected !== null && (
-        <button
-          onClick={handleContinue}
-          className="mt-8 px-10 py-3 bg-yellow-400 text-black font-bold rounded-full shadow-lg hover:scale-105 transition"
-        >
-          Continue →
-        </button>
-      )}
-
-    </div>
-
-  </main>
-);
+    </main>
+  );
 }
