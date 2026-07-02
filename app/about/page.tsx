@@ -22,11 +22,11 @@ export default function AboutPage() {
       {/* Dark Overlay */}
       <div className="absolute inset-0 bg-black/55 -z-10" />
 
-      <div className="flex h-full items-center justify-center px-4">
+      <div className="flex h-full items-center justify-center">
 
         <div className="flex flex-col items-center text-center gap-8">
 
-          {/* Heading */}
+          {/* Heading (UNCHANGED) */}
           <p
             className="text-xl uppercase tracking-[0.25em] text-yellow-300"
             style={{ fontFamily: "var(--font-heading)" }}
@@ -34,14 +34,14 @@ export default function AboutPage() {
             Meet Today's Birthday Star
           </p>
 
-          {/* PHOTO (FIXED) */}
+          {/* PHOTO (ONLY FIX) */}
           <img
             src="/photos/contestant.png"
             alt="Contestant"
             className="h-44 w-44 rounded-full border-[3px] border-yellow-400 object-cover shadow-xl"
           />
 
-          {/* Name */}
+          {/* Name (UNCHANGED) */}
           <div className="flex flex-col items-center gap-3">
 
             <h1
@@ -60,7 +60,7 @@ export default function AboutPage() {
 
           </div>
 
-          {/* Details */}
+          {/* Details (UNCHANGED) */}
           <div className="flex flex-col items-center gap-8">
 
             <Info title="Birthplace" value="Vashi, India" />
@@ -70,7 +70,7 @@ export default function AboutPage() {
 
           </div>
 
-          {/* Mission */}
+          {/* Mission (UNCHANGED) */}
           <div className="flex flex-col items-center gap-3">
 
             <p className="text-3xl font-semibold text-yellow-300">
@@ -89,7 +89,7 @@ export default function AboutPage() {
 
           </div>
 
-          {/* Start Button */}
+          {/* Button (UNCHANGED) */}
           <Link
             href="/episode"
             className="
