@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { questions } from "@/data/questions";
 
-const MAX = 14;
-
 export default function EpisodePage() {
   const router = useRouter();
   const params = useSearchParams();
@@ -14,13 +12,15 @@ export default function EpisodePage() {
   const question = questions[q];
 
   const [selected, setSelected] = useState<number | null>(null);
-  const [locked, setLocked] = useState(false);
+  const [stage, setStage] = useState<
+    "question" | "gift" | "twist"
+  >("question");
+
   const [showPopup, setShowPopup] = useState(false);
 
-  /* ================= RESET ON QUESTION CHANGE ================= */
   useEffect(() => {
     setSelected(null);
-    setLocked(false);
+    setStage("question");
     setShowPopup(false);
   }, [q]);
 
@@ -29,83 +29,113 @@ export default function EpisodePage() {
     return null;
   }
 
-  const handleContinue = () => {
-    if (selected === null || locked) return;
+  const next = q + 1;
+  const isLast = next >= 14;
+  const correct = selected === question.correctAnswer;
 
-    setLocked(true);
+  /* ================= STEP 1: ANSWER ================= */
+  const handleAnswer = () => {
+    if (selected === null) return;
 
-    const next = q + 1;
-    const isLast = next >= MAX;
-    const correct = selected === question.correctAnswer;
-
-    // 🏁 FINAL QUESTION → ALWAYS GO FINAL VIDEO
     if (isLast) {
       router.push("/final-video");
       return;
     }
 
-    // ❌ WRONG ANSWER FLOW (POPUP FIRST, THEN ROUTE)
-    if (!correct) {
-      setShowPopup(true);
-
-      setTimeout(() => {
-        router.push(`/birthday-twist?q=${next + 1}`);
-      }, 1800);
-
-      return; // 🚨 CRITICAL STOP (prevents double navigation)
+    if (correct) {
+      setStage("gift");
+      return;
     }
 
-    // ✅ CORRECT ANSWER FLOW
-    router.push(`/gift?q=${next + 1}`);
+    setStage("twist");
+    setShowPopup(true);
+  };
+
+  /* ================= STEP 2: CONTINUE FROM GIFT ================= */
+  const goFromGift = () => {
+    router.push(`/episode?q=${next + 1}`);
+  };
+
+  /* ================= STEP 3: CONTINUE FROM TWIST ================= */
+  const goFromTwist = () => {
+    setShowPopup(false);
+    setStage("gift");
   };
 
   return (
     <main className="w-screen h-screen flex items-center justify-center bg-black text-white relative">
 
       {/* ================= POPUP ================= */}
-      {showPopup && (
+      {showPopup && stage === "twist" && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80">
           <img
             src="/birthday-twist.png"
             className="w-full h-full object-cover"
-            alt="birthday twist"
           />
         </div>
       )}
 
-      {/* ================= CONTENT ================= */}
-      <div className="w-[90%] max-w-2xl text-center">
+      {/* ================= QUESTION ================= */}
+      {stage === "question" && (
+        <div className="text-center w-[90%] max-w-2xl">
 
-        <h1 className="text-xl mb-4">
-          Question {q + 1}
-        </h1>
+          <h1 className="text-xl mb-4">
+            Question {q + 1}
+          </h1>
 
-        <p className="mb-6">{question.question}</p>
+          <p className="mb-6">{question.question}</p>
 
-        <div className="grid grid-cols-2 gap-4">
-          {question.options.map((opt, i) => (
+          <div className="grid grid-cols-2 gap-4">
+            {question.options.map((opt, i) => (
+              <button
+                key={i}
+                onClick={() => setSelected(i)}
+                className={`p-3 border rounded ${
+                  selected === i
+                    ? "bg-yellow-400 text-black"
+                    : "border-yellow-400"
+                }`}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+
+          {selected !== null && (
             <button
-              key={i}
-              onClick={() => setSelected(i)}
-              className={`p-3 border rounded ${
-                selected === i ? "bg-yellow-400 text-black" : "border-yellow-400"
-              }`}
+              onClick={handleAnswer}
+              className="mt-6 px-6 py-3 bg-yellow-400 text-black rounded-full"
             >
-              {opt}
+              Continue
             </button>
-          ))}
+          )}
+
         </div>
+      )}
 
-        {selected !== null && (
+      {/* ================= GIFT PAGE ================= */}
+      {stage === "gift" && (
+        <div className="text-center">
+          <h1 className="mb-6 text-xl">🎁 Gift Unlocked</h1>
+
           <button
-            onClick={handleContinue}
-            className="mt-6 px-6 py-3 bg-yellow-400 text-black rounded-full"
+            onClick={goFromGift}
+            className="px-6 py-3 bg-yellow-400 text-black rounded-full"
           >
-            Continue
+            Next Question →
           </button>
-        )}
+        </div>
+      )}
 
-      </div>
+      {/* ================= TWIST CONTINUE ================= */}
+      {stage === "twist" && showPopup && (
+        <button
+          onClick={goFromTwist}
+          className="absolute bottom-10 px-6 py-3 bg-white text-black rounded-full z-50"
+        >
+          Continue →
+        </button>
+      )}
 
     </main>
   );
