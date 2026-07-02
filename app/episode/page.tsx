@@ -17,20 +17,18 @@ export default function EpisodePage() {
   const [transition, setTransition] = useState(true);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const isLockedRef = useRef(false);
+  const lockRef = useRef(false);
 
-  /* ================= LOAD EPISODE ================= */
+  /* ================= LOAD ================= */
   useEffect(() => {
-    let saved = sessionStorage.getItem("episodeIndex");
+    // always start fresh session
+    sessionStorage.removeItem("episodeIndex");
 
-    let index = saved ? Number(saved) : 0;
-
-    if (isNaN(index) || index < 0) index = 0;
-    if (index > MAX_EPISODES) index = MAX_EPISODES;
-
-    setEpisodeIndex(index);
-
-    isLockedRef.current = false;
+    setEpisodeIndex(0);
+    setSelected(null);
+    setRevealed(false);
+    setShowPopup(false);
+    lockRef.current = false;
 
     setTransition(true);
     const t = setTimeout(() => setTransition(false), 800);
@@ -40,8 +38,8 @@ export default function EpisodePage() {
 
   const question = questions[episodeIndex];
 
-  /* ================= AUTO SAFETY ================= */
-  if (!question || episodeIndex >= MAX_EPISODES) {
+  /* ================= SAFETY ================= */
+  if (!question) {
     router.replace("/final-video");
     return null;
   }
@@ -55,11 +53,10 @@ export default function EpisodePage() {
 
     const audio = new Audio(src);
     audioRef.current = audio;
-
     audio.play().catch(() => {});
   };
 
-  /* ================= SELECT ================= */
+  /* ================= CHOOSE ================= */
   function chooseAnswer(i: number) {
     if (selected !== null) return;
 
@@ -70,9 +67,9 @@ export default function EpisodePage() {
   /* ================= REVEAL ================= */
   function revealAnswer() {
     if (selected === null) return;
-    if (isLockedRef.current) return;
+    if (lockRef.current) return;
 
-    isLockedRef.current = true;
+    lockRef.current = true;
     setRevealed(true);
 
     const next = episodeIndex + 1;
@@ -82,33 +79,41 @@ export default function EpisodePage() {
     if (isCorrect) {
       playSound("/sounds/correct.mp3");
 
-      sessionStorage.setItem("episodeIndex", String(next));
-
       setTimeout(() => {
-        if (goFinal) router.push("/final-video");
-        else router.push("/gift");
-      }, 1000);
+        if (goFinal) {
+          router.push("/final-video");
+        } else {
+          setEpisodeIndex(next);
+          setSelected(null);
+          setRevealed(false);
+          lockRef.current = false;
+        }
+      }, 900);
 
       return;
     }
 
     playSound("/sounds/cheers.mp3");
 
-    sessionStorage.setItem("episodeIndex", String(next));
-
     setTimeout(() => {
       setShowPopup(true);
 
       setTimeout(() => {
-        if (goFinal) router.push("/final-video");
-        else router.push("/birthday-twist");
+        if (goFinal) {
+          router.push("/final-video");
+        } else {
+          setEpisodeIndex(next);
+          setSelected(null);
+          setRevealed(false);
+          setShowPopup(false);
+          lockRef.current = false;
+        }
       }, 2000);
-    }, 1200);
+    }, 1000);
   }
 
   return (
     <main style={pageStyle}>
-
       <div style={bgImage} />
       <div style={overlay} />
       {transition && <div style={fadeOverlay} />}
@@ -123,15 +128,35 @@ export default function EpisodePage() {
       )}
 
       <div style={center}>
-
         <div style={container}>
 
-          {/* ================= TITLE (TYPOGRAPHY) ================= */}
+          {/* ================= TITLE ================= */}
           <Typography variant="h2">
             EPISODE {episodeIndex + 1} / 14
           </Typography>
 
-          {/* ================= QUESTION (TYPOGRAPHY) ================= */}
+          {/* ================= PROGRESS BAR (RESTORED) ================= */}
+          <div
+            style={{
+              height: "6px",
+              background: "#222",
+              borderRadius: "10px",
+              marginTop: "10px",
+              marginBottom: "20px",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                height: "100%",
+                width: `${((episodeIndex + 1) / 14) * 100}%`,
+                background: "#FFD54A",
+                transition: "width 0.5s ease",
+              }}
+            />
+          </div>
+
+          {/* ================= QUESTION ================= */}
           <div style={questionBox}>
             <Typography variant="p">
               {question.question}
@@ -170,9 +195,7 @@ export default function EpisodePage() {
           )}
 
         </div>
-
       </div>
-
     </main>
   );
 }
@@ -237,7 +260,6 @@ const questionBox: any = {
   background: "#0b1d3a",
   borderRadius: "25px",
   border: "2px solid #FFD54A",
-  marginTop: "20px",
   marginBottom: "25px",
 };
 
