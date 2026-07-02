@@ -26,34 +26,42 @@ export default function GiftPage() {
     } catch {}
   };
 
-  return (
-    <main className="w-screen h-screen bg-black relative">
+ return (
+  <main className="w-screen h-screen bg-black relative overflow-hidden">
 
-      <video
-        ref={videoRef}
-        src="/videos/gift.mp4"
-        className="w-full h-full object-cover"
-        playsInline
-      />
+    {/* VIDEO BACKDROP */}
+    <video
+      ref={videoRef}
+      src="/videos/gift.mp4"
+      className="w-full h-full object-cover"
+      playsInline
+    />
 
-      {!playing && (
+    {/* DARK OVERLAY */}
+    <div className="absolute inset-0 bg-black/40" />
+
+    {/* CENTER CTA */}
+    {!playing && (
+      <div className="absolute inset-0 flex items-center justify-center">
         <button
           onClick={play}
-          className="absolute inset-0 m-auto px-6 py-3 bg-yellow-400 text-black rounded-full"
+          className="px-8 py-4 bg-yellow-400 text-black font-bold rounded-full shadow-2xl hover:scale-105 transition"
         >
-          Open Gift
+          🎁 Open Your Gift
         </button>
-      )}
+      </div>
+    )}
 
-      {playing && (
-        <button
-          onClick={() => router.push(`/episode?q=${q}`)}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full"
-        >
-          Next →
-        </button>
-      )}
+    {/* NEXT BUTTON */}
+    {playing && (
+      <button
+        onClick={() => router.push(`/episode?q=${q}`)}
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 px-8 py-3 bg-white text-black font-bold rounded-full shadow-lg"
+      >
+        Next Question →
+      </button>
+    )}
 
-    </main>
-  );
+  </main>
+);
 }
