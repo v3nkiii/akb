@@ -1,51 +1,52 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function GiftPage() {
   const router = useRouter();
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [started, setStarted] = useState(false);
+  const params = useSearchParams();
 
-  const playVideo = async () => {
-    const video = videoRef.current;
-    if (!video) return;
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [playing, setPlaying] = useState(false);
+
+  const q = params.get("q");
+
+  const play = async () => {
+    const v = videoRef.current;
+    if (!v) return;
 
     try {
-      await video.play();
-      setStarted(true);
-    } catch (e) {
-      console.log("Video blocked:", e);
-    }
+      await v.play();
+      setPlaying(true);
+    } catch {}
   };
 
   return (
-    <main className="w-screen h-screen bg-black flex items-center justify-center relative">
+    <main className="w-screen h-screen bg-black relative">
 
       <video
         ref={videoRef}
         src="/videos/gift.mp4"
         className="w-full h-full object-cover"
         playsInline
-        controls={false}
       />
 
-      {!started && (
+      {!playing && (
         <button
-          onClick={playVideo}
-          className="absolute z-10 px-6 py-3 bg-yellow-400 text-black font-bold rounded-full"
+          onClick={play}
+          className="absolute inset-0 m-auto px-6 py-3 bg-yellow-400 text-black rounded-full"
         >
           Open Gift 🎁
         </button>
       )}
 
-      {started && (
+      {playing && (
         <button
-          onClick={() => router.push("/birthday-twist")}
-          className="absolute bottom-10 z-10 px-6 py-3 bg-white text-black rounded-full"
+          onClick={() => router.push(`/birthday-twist?q=${q}`)}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full"
         >
-          Next →
+          Continue →
         </button>
       )}
 
