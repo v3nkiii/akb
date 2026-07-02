@@ -16,32 +16,33 @@ export default function EpisodePage() {
   const [transition, setTransition] = useState(true);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const isProcessingRef = useRef(false);
+  const isLockedRef = useRef(false);
 
-  /* ================= LOAD ================= */
+  /* ================= LOAD EPISODE ================= */
   useEffect(() => {
-    const saved = sessionStorage.getItem("episodeIndex");
+    let saved = sessionStorage.getItem("episodeIndex");
 
     let index = saved ? Number(saved) : 0;
 
-    // 🚨 HARD CLAMP (prevents reset / looping / Q1 bug)
     if (isNaN(index) || index < 0) index = 0;
-    if (index >= MAX_EPISODES) index = MAX_EPISODES;
+
+    // 🚨 HARD CLAMP (prevents invalid + repeat issues)
+    if (index > MAX_EPISODES) index = MAX_EPISODES;
 
     setEpisodeIndex(index);
 
-    isProcessingRef.current = false;
+    isLockedRef.current = false;
 
     setTransition(true);
-    const t = setTimeout(() => setTransition(false), 900);
+    const t = setTimeout(() => setTransition(false), 800);
 
     return () => clearTimeout(t);
   }, []);
 
   const question = questions[episodeIndex];
 
-  /* ================= SAFETY: FINAL STATE ================= */
-  if (episodeIndex >= MAX_EPISODES || !question) {
+  /* ================= AUTO SAFETY ================= */
+  if (!question || episodeIndex >= MAX_EPISODES) {
     router.replace("/final-video");
     return null;
   }
@@ -55,11 +56,10 @@ export default function EpisodePage() {
 
     const audio = new Audio(src);
     audioRef.current = audio;
-
     audio.play().catch(() => {});
   };
 
-  /* ================= CHOOSE ================= */
+  /* ================= SELECT ================= */
   function chooseAnswer(i: number) {
     if (selected !== null) return;
 
@@ -70,32 +70,26 @@ export default function EpisodePage() {
   /* ================= REVEAL ================= */
   function revealAnswer() {
     if (selected === null) return;
+    if (isLockedRef.current) return;
 
+    isLockedRef.current = true;
     setRevealed(true);
 
+    const next = episodeIndex + 1;
     const isCorrect = selected === question.correctAnswer;
 
-    const next = episodeIndex + 1;
-
-    // 🏁 FINAL CONDITION (BOTH CORRECT & WRONG)
     const goFinal = next >= MAX_EPISODES;
 
     /* ================= CORRECT ================= */
     if (isCorrect) {
-      if (isProcessingRef.current) return;
-      isProcessingRef.current = true;
-
       playSound("/sounds/correct.mp3");
 
       sessionStorage.setItem("episodeIndex", String(next));
 
       setTimeout(() => {
-        if (goFinal) {
-          router.push("/final-video");
-        } else {
-          router.push("/gift");
-        }
-      }, 1200);
+        if (goFinal) router.push("/final-video");
+        else router.push("/gift");
+      }, 1000);
 
       return;
     }
@@ -109,13 +103,10 @@ export default function EpisodePage() {
       setShowPopup(true);
 
       setTimeout(() => {
-        if (goFinal) {
-          router.push("/final-video");
-        } else {
-          router.push("/birthday-twist");
-        }
-      }, 2500);
-    }, 1800);
+        if (goFinal) router.push("/final-video");
+        else router.push("/birthday-twist");
+      }, 2000);
+    }, 1200);
   }
 
   return (
@@ -123,7 +114,6 @@ export default function EpisodePage() {
 
       <div style={bgImage} />
       <div style={overlay} />
-
       {transition && <div style={fadeOverlay} />}
 
       {showPopup && (
@@ -165,7 +155,7 @@ export default function EpisodePage() {
                     ...(isWrong ? wrongStyle : {}),
                   }}
                 >
-                  <b>{["A", "B", "C", "D"][i]}</b> {question.options[i]}
+                  <b>{["A", "B", "C", "D"][i]}</b> {opt}
                 </button>
               );
             })}
@@ -185,7 +175,7 @@ export default function EpisodePage() {
   );
 }
 
-/* ================= STYLES ================= */
+/* ================= STYLES (MOBILE FIXED) ================= */
 
 const pageStyle: any = {
   height: "100vh",
@@ -214,7 +204,7 @@ const fadeOverlay: any = {
   position: "absolute",
   inset: 0,
   background: "black",
-  animation: "fadeOut 0.9s forwards",
+  animation: "fadeOut 0.8s forwards",
   zIndex: 2,
 };
 
@@ -234,29 +224,31 @@ const center: any = {
 };
 
 const container: any = {
-  width: "900px",
+  width: "90%",
+  maxWidth: "900px",
   textAlign: "center",
   color: "white",
 };
 
 const title: any = {
-  fontSize: "38px",
+  fontSize: "clamp(20px, 5vw, 38px)",
   color: "#FFD54A",
   marginBottom: "10px",
 };
 
 const questionBox: any = {
-  padding: "25px",
+  padding: "20px",
   background: "#0b1d3a",
   borderRadius: "25px",
   border: "2px solid #FFD54A",
   marginBottom: "25px",
+  fontSize: "clamp(16px, 4vw, 22px)",
 };
 
 const grid: any = {
   display: "grid",
   gridTemplateColumns: "1fr 1fr",
-  gap: "18px",
+  gap: "14px",
 };
 
 const option: any = {
@@ -266,6 +258,7 @@ const option: any = {
   background: "#0b1d3a",
   color: "white",
   cursor: "pointer",
+  fontSize: "clamp(14px, 3.5vw, 18px)",
 };
 
 const selectedStyle: any = {
