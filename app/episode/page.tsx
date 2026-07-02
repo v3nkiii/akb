@@ -131,9 +131,9 @@ export default function EpisodePage() {
         <div style={container}>
 
           {/* ================= TITLE ================= */}
-          <Typography variant="h2">
-            EPISODE {episodeIndex + 1} / 14
-          </Typography>
+<Typography variant="h2">
+  QUESTION {episodeIndex + 1}
+</Typography>
 
           {/* ================= PROGRESS BAR (RESTORED) ================= */}
           <div
