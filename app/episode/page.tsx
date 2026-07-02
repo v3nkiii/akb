@@ -13,19 +13,16 @@ export default function EpisodePage() {
   const [selected, setSelected] = useState<number | null>(null);
   const [locked, setLocked] = useState(false);
 
-  const question = questions[q];
-
-  // ✅ SAFE URL READ (NO useSearchParams)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const query = Number(params.get("q") || "1") - 1;
+    const index = Number(params.get("q") || "1") - 1;
 
-    const safe = Math.max(0, Math.min(query, MAX - 1));
-
-    setQ(safe);
+    setQ(Math.max(0, Math.min(index, MAX - 1)));
     setSelected(null);
     setLocked(false);
   }, []);
+
+  const question = questions[q];
 
   if (!question) {
     router.replace("/final-video");
@@ -46,19 +43,32 @@ export default function EpisodePage() {
       return;
     }
 
-    if (correct) {
-      router.push(`/gift?q=${next + 1}`);
-    } else {
-      router.push(`/birthday-twist?q=${next + 1}`);
-    }
+    router.push(
+      correct
+        ? `/gift?q=${next + 1}`
+        : `/birthday-twist?q=${next + 1}`
+    );
   };
 
   return (
-    <main className="w-screen h-screen flex items-center justify-center bg-black text-white">
+    <main className="w-screen h-screen relative flex items-center justify-center text-white">
 
-      <div className="w-[90%] max-w-2xl text-center">
+      {/* BACKGROUND */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: "url('/backgrounds/akb-stage.png')",
+          backgroundSize: "cover",
+          filter: "brightness(0.35) blur(5px)",
+        }}
+      />
 
-        <h1 className="text-xl mb-4">
+      <div className="absolute inset-0 bg-black/60" />
+
+      {/* CONTENT */}
+      <div className="relative z-10 w-[90%] max-w-2xl text-center">
+
+        <h1 className="text-2xl text-yellow-300 mb-3">
           Question {q + 1}
         </h1>
 
@@ -70,7 +80,9 @@ export default function EpisodePage() {
               key={i}
               onClick={() => setSelected(i)}
               className={`p-3 border rounded ${
-                selected === i ? "bg-yellow-400 text-black" : "border-yellow-400"
+                selected === i
+                  ? "bg-yellow-400 text-black"
+                  : "border-yellow-400"
               }`}
             >
               {opt}
@@ -88,7 +100,6 @@ export default function EpisodePage() {
         )}
 
       </div>
-
     </main>
   );
 }
