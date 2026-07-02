@@ -1,100 +1,80 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function GiftPage() {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [showButton, setShowButton] = useState(false);
+  const [playing, setPlaying] = useState(false);
 
-  useEffect(() => {
+  const startVideo = async () => {
     const video = videoRef.current;
     if (!video) return;
 
-    video.loop = false;
-    video.muted = false; // ✅ FIX AUDIO
-    video.volume = 1;
+    try {
+      // REQUIRED FOR iOS
+      video.muted = false;
+      video.currentTime = 0;
 
-    video.play().catch(() => {});
-
-    const timer = setTimeout(() => {
-      setShowButton(true);
-    }, 8000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  function nextEpisode() {
-    const current = Number(localStorage.getItem("episodeIndex") || "0");
-    const next = current + 1;
-
-    localStorage.setItem("episodeIndex", String(next));
-
-    router.push("/episode");
-  }
+      await video.play();
+      setPlaying(true);
+    } catch (err) {
+      console.log("Video play blocked:", err);
+    }
+  };
 
   return (
-    <main style={pageStyle}>
+    <main className="relative w-screen h-screen bg-black flex items-center justify-center">
 
+      {/* VIDEO */}
       <video
         ref={videoRef}
         src="/videos/gift.mp4"
-        autoPlay
+        className="w-full h-full object-cover"
         playsInline
-        style={videoStyle}
+        controls={false}
+        preload="auto"
       />
 
-      <div style={overlay} />
+      {/* PLAY BUTTON (iOS SAFE TRIGGER) */}
+      {!playing && (
+        <button
+          onClick={startVideo}
+          className="
+            absolute
+            z-10
+            px-8 py-4
+            bg-yellow-400
+            text-black
+            font-bold
+            rounded-full
+            shadow-lg
+          "
+        >
+          ▶ Play Gift
+        </button>
+      )}
 
-      {showButton && (
-        <div style={btnWrap}>
-          <button onClick={nextEpisode} style={btn}>
-            ▶ Next Episode
-          </button>
-        </div>
+      {/* BACK BUTTON AFTER PLAY */}
+      {playing && (
+        <button
+          onClick={() => router.push("/episode")}
+          className="
+            absolute
+            bottom-10
+            z-10
+            px-8 py-3
+            bg-white
+            text-black
+            font-bold
+            rounded-full
+          "
+        >
+          Next Episode →
+        </button>
       )}
 
     </main>
   );
 }
-
-/* styles */
-
-const pageStyle: any = {
-  height: "100vh",
-  width: "100vw",
-  overflow: "hidden",
-  position: "relative",
-  background: "black",
-};
-
-const videoStyle: any = {
-  position: "absolute",
-  inset: 0,
-  width: "100%",
-  height: "100%",
-  objectFit: "cover",
-};
-
-const overlay: any = {
-  position: "absolute",
-  inset: 0,
-  background: "rgba(0,0,0,0.2)",
-};
-
-const btnWrap: any = {
-  position: "absolute",
-  bottom: "60px",
-  width: "100%",
-  display: "flex",
-  justifyContent: "center",
-};
-
-const btn: any = {
-  padding: "14px 24px",
-  background: "#FFD54A",
-  border: "none",
-  borderRadius: "20px",
-  fontWeight: "bold",
-};
