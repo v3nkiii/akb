@@ -16,11 +16,11 @@ export default function Home() {
       {/* DARK OVERLAY */}
       <div className="absolute inset-0 bg-black/20" />
 
-      {/* BUTTON WRAPPER */}
+      {/* BUTTON ONLY */}
       <div
         className="absolute left-1/2 -translate-x-1/2"
         style={{
-          top: "clamp(65%, 72%, 78%)",
+          top: "72%",
         }}
       >
         <Link
@@ -43,7 +43,6 @@ export default function Home() {
             duration-300
             hover:scale-105
             hover:bg-[#0A255A]
-            text-center
           "
         >
           ▶ START SHOW
